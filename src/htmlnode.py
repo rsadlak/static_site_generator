@@ -16,6 +16,16 @@ class HtmlNode:
     def __repr__(self):
         return f"HtmlNode(tag={self.tag}, value={self.value}, children={self.children}, props={self.props})"
     
+    def __eq__(self, other):
+        if not isinstance(other, HtmlNode):
+            return NotImplemented
+        return (
+            self.tag == other.tag
+            and self.value == other.value
+            and self.children == other.children
+            and self.props == other.props
+        )
+    
 
 class LeafNode(HtmlNode):
     def __init__(self, tag=None, value=None, props=None):
@@ -46,4 +56,6 @@ class ParentNode(HtmlNode):
         
         return f"<{self.tag}{self.props_to_html()}>{''.join(child.to_html() for child in self.children)}</{self.tag}>"
     
+    def __eq__(self, other):
+        return super().__eq__(other)
 
