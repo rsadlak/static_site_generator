@@ -45,22 +45,43 @@ def markdown_to_html_node(markdown):
             level = len(block.split(' ')[0])
             tag = f"h{level}"
             content = block[level+1:].strip()
-            children.append(htmlnode(tag, content))
+            children.append(LeafNode(tag, content))
         elif block_type == BlockType.UNORDERED_LIST:
+            from textnode import text_to_textnodes, text_node_to_html_node
             items = [item[2:].strip() for item in block.split('\n') if item.startswith('- ')]
-            li_nodes = [HTMLNode('li', item) for item in items]
-            children.append(HTMLNode('ul', '', li_nodes))
+            li_nodes = []
+            for item in items:
+                text_nodes = text_to_textnodes(item)
+                html_nodes = [text_node_to_html_node(node) for node in text_nodes]
+                li_nodes.append(ParentNode('li', html_nodes))
+            children.append(ParentNode('ul', li_nodes))
         elif block_type == BlockType.ORDERED_LIST:
+            from textnode import text_to_textnodes, text_node_to_html_node
             items = [re.sub(r'^\d+\. ', '', item).strip() for item in block.split('\n') if re.match(r'^\d+\. ', item)]
-            li_nodes = [HTMLNode('li', item) for item in items]
-            children.append(HTMLNode('ol', '', li_nodes))
+            li_nodes = []
+            for item in items:
+                text_nodes = text_to_textnodes(item)
+                html_nodes = [text_node_to_html_node(node) for node in text_nodes]
+                li_nodes.append(ParentNode('li', html_nodes))
+            children.append(ParentNode('ol', li_nodes))
         elif block_type == BlockType.QUOTE:
             content = '\n'.join([line[2:].strip() for line in block.split('\n') if line.startswith('> ')])
-            children.append(HTMLNode('blockquote', content))
+            children.append(LeafNode('blockquote', content))
         elif block_type == BlockType.CODE:
             content = block.strip('`')
-            children.append(HTMLNode('pre', HTMLNode('code', content)))
+            children.append(ParentNode('pre', [LeafNode('code', content)]))
         else:
             # Paragraph, with inline markdown parsing
-            children.append(HTMLNode('p', block))
-    return HTMLNode('div', '', children)
+            from textnode import text_to_textnodes, text_node_to_html_node
+            text_nodes = text_to_textnodes(block)
+            html_nodes = [text_node_to_html_node(node) for node in text_nodes]
+            children.append(ParentNode('p', html_nodes))
+    return ParentNode('div', children)
+
+def extract_title(markdown):
+    blocks = markdown_to_blocks(markdown)
+    for block in blocks:
+        if block.startswith("# "):
+            return block[2:].strip()
+        else:
+            raise Exception("No title found in markdown")
