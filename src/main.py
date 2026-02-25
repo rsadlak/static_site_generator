@@ -10,6 +10,13 @@ def static_to_public():
         shutil.rmtree('public')
     shutil.copytree('static', 'public')
 
+    import sys
+    # Get basepath from CLI argument, default to '/'
+    if len(sys.argv) > 1:
+        basepath = sys.argv[1]
+    else:
+        basepath = "/"
+
     for root, dirs, files in os.walk('content'):
         for file in files:
             if file.endswith('.md'):
@@ -17,7 +24,7 @@ def static_to_public():
                 rel_path = os.path.relpath(md_path, 'content')
                 html_path = os.path.splitext(rel_path)[0] + '.html'
                 dest_path = os.path.join('public', html_path)
-                generate_page(md_path, 'template.html', dest_path)
+                generate_page(md_path, 'template.html', dest_path, basepath)
     
 
 if __name__ == "__main__":

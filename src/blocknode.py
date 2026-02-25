@@ -35,9 +35,10 @@ def block_to_block_type(block):
     else:
         return BlockType.PRAGRAPH
     
-def markdown_to_html_node(markdown):
+def markdown_to_html_node(markdown, basepath=None):
     blocks = markdown_to_blocks(markdown)
     children = []
+    from textnode import text_to_textnodes, text_node_to_html_node
     for block in blocks:
         block_type = block_to_block_type(block)
         if block_type == BlockType.HEADING:
@@ -47,21 +48,19 @@ def markdown_to_html_node(markdown):
             content = block[level+1:].strip()
             children.append(LeafNode(tag, content))
         elif block_type == BlockType.UNORDERED_LIST:
-            from textnode import text_to_textnodes, text_node_to_html_node
             items = [item[2:].strip() for item in block.split('\n') if item.startswith('- ')]
             li_nodes = []
             for item in items:
                 text_nodes = text_to_textnodes(item)
-                html_nodes = [text_node_to_html_node(node) for node in text_nodes]
+                html_nodes = [text_node_to_html_node(node, basepath) for node in text_nodes]
                 li_nodes.append(ParentNode('li', html_nodes))
             children.append(ParentNode('ul', li_nodes))
         elif block_type == BlockType.ORDERED_LIST:
-            from textnode import text_to_textnodes, text_node_to_html_node
             items = [re.sub(r'^\d+\. ', '', item).strip() for item in block.split('\n') if re.match(r'^\d+\. ', item)]
             li_nodes = []
             for item in items:
                 text_nodes = text_to_textnodes(item)
-                html_nodes = [text_node_to_html_node(node) for node in text_nodes]
+                html_nodes = [text_node_to_html_node(node, basepath) for node in text_nodes]
                 li_nodes.append(ParentNode('li', html_nodes))
             children.append(ParentNode('ol', li_nodes))
         elif block_type == BlockType.QUOTE:
@@ -71,10 +70,8 @@ def markdown_to_html_node(markdown):
             content = block.strip('`')
             children.append(ParentNode('pre', [LeafNode('code', content)]))
         else:
-            # Paragraph, with inline markdown parsing
-            from textnode import text_to_textnodes, text_node_to_html_node
             text_nodes = text_to_textnodes(block)
-            html_nodes = [text_node_to_html_node(node) for node in text_nodes]
+            html_nodes = [text_node_to_html_node(node, basepath) for node in text_nodes]
             children.append(ParentNode('p', html_nodes))
     return ParentNode('div', children)
 

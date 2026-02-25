@@ -3,18 +3,18 @@ import blocknode
 import htmlnode
 import os
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
 
     
     content = open(from_path).read()
     template = open(template_path).read()
 
-    converted_content = blocknode.markdown_to_html_node(content).to_html()
+    converted_content = blocknode.markdown_to_html_node(content, basepath).to_html()
 
     title = blocknode.extract_title(content)
 
-    final_html = template.replace("{{content}}", converted_content).replace("{{title}}", title)
+    final_html = template.replace("{{content}}", converted_content).replace("{{title}}", title).replace("{{basepath}}", basepath.rstrip("/"))
 
     dest_dir = os.path.dirname(dest_path)
     if dest_dir and not os.path.exists(dest_dir):

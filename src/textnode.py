@@ -32,7 +32,8 @@ class TextNode:
     
 
 # Standalone function for converting TextNode to HTML node
-def text_node_to_html_node(text_node):
+def text_node_to_html_node(text_node, basepath=None):
+    # basepath is used for links/images
     if text_node.text_type == TextType.TEXT:
         return LeafNode(None, text_node.text)
     elif text_node.text_type == TextType.BOLD:
@@ -42,9 +43,15 @@ def text_node_to_html_node(text_node):
     elif text_node.text_type == TextType.CODE:
         return LeafNode("code", text_node.text)
     elif text_node.text_type == TextType.LINKS:
-        return LeafNode("a", text_node.text, props={"href": text_node.url})
+        href = text_node.url
+        if basepath and href and href.startswith("/"):
+            href = basepath.rstrip("/") + href
+        return LeafNode("a", text_node.text, props={"href": href})
     elif text_node.text_type == TextType.IMAGE:
-        return LeafNode("img", "", props={"src": text_node.url, "alt": text_node.text})
+        src = text_node.url
+        if basepath and src and src.startswith("/"):
+            src = basepath.rstrip("/") + src
+        return LeafNode("img", "", props={"src": src, "alt": text_node.text})
     else:
         raise ValueError(f"Unsupported text type: {text_node.text_type}")
 
